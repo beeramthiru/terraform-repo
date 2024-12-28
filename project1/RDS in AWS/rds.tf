@@ -19,9 +19,9 @@ resource "aws_db_parameter_group" "levelup-mariadb-parameters" {
 
 #RDS Instance properties
 resource "aws_db_instance" "levelup-mariadb" {
-  allocated_storage       = 10             # 20 GB of storage
+  allocated_storage       = 20             # 20 GB of storage
   engine                  = "mariadb"
-  engine_version          = "10.4.8"
+  engine_version          = "10.4.29"
   instance_class          = "db.t2.micro"  # use micro if you want to use the free tier
   identifier              = "mariadb"
   username                = "root"           # username
