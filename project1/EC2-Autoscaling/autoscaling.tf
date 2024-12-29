@@ -1,10 +1,36 @@
-#AutoScaling Launch Configuration
-resource "aws_launch_configuration" "levelup-launchconfig" {
-  name_prefix     = "levelup-launchconfig"
-  image_id        = lookup(var.AMIS, var.AWS_REGION)
-  instance_type   = "t2.micro"
-  key_name        = aws_key_pair.levelup_key.key_name
+# Launch Template Resource
+resource "aws_launch_template" "my_launch_template" {
+  name = "my-launch-template"
+  description = "My Launch Template"
+  image_id = lookup(var.AMIS, var.AWS_REGION)
+  instance_type = "t2.micro"
+
+  #vpc_security_group_ids = [module.private_sg.security_group_id]
+  key_name = aws_key_pair.levelup_key.key_name 
+  ebs_optimized = true
+  #default_version = 1
+  update_default_version = true
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size = 10 
+      #volume_size = 20 # LT Update Testing - Version 2 of LT      
+      delete_on_termination = true
+      volume_type = "gp2" # default is gp2
+     }
+  }
+  monitoring {
+    enabled = true
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name = "myasg"
+    }
+  }
 }
+
 
 #Generate Key
 resource "aws_key_pair" "levelup_key" {
@@ -15,7 +41,7 @@ resource "aws_key_pair" "levelup_key" {
 #Autoscaling Group
 resource "aws_autoscaling_group" "levelup-autoscaling" {
   name                      = "levelup-autoscaling"
-  vpc_zone_identifier       = ["subnet-9e0ad9f5", "subnet-d7a6afad"]
+  #vpc_zone_identifier       = ["subnet-9e0ad9f5", "subnet-d7a6afad"]
   launch_configuration      = aws_launch_configuration.levelup-launchconfig.name
   min_size                  = 1
   max_size                  = 2
