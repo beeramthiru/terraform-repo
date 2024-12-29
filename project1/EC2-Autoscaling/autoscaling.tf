@@ -39,7 +39,7 @@ resource "aws_launch_template" "my_launch_template" {
 #Autoscaling Group
 resource "aws_autoscaling_group" "levelup-autoscaling" {
   availability_zones = ["us-east-1a"]
-  desired_capacity   = 1
+  #desired_capacity   = 2
   max_size           = 2
   min_size           = 1
 
