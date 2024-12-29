@@ -38,21 +38,17 @@ resource "aws_key_pair" "levelup_key" {
     public_key = file(var.PATH_TO_PUBLIC_KEY)
 }
 
+
 #Autoscaling Group
 resource "aws_autoscaling_group" "levelup-autoscaling" {
-  name                      = "levelup-autoscaling"
-  #vpc_zone_identifier       = ["subnet-9e0ad9f5", "subnet-d7a6afad"]
-  launch_configuration      = aws_launch_configuration.levelup-launchconfig.name
-  min_size                  = 1
-  max_size                  = 2
-  health_check_grace_period = 200
-  health_check_type         = "EC2"
-  force_delete              = true
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 2
+  min_size           = 1
 
-  tag {
-    key                 = "Name"
-    value               = "LevelUp Custom EC2 instance"
-    propagate_at_launch = true
+  launch_template {
+    id      = aws_launch_template.my_launch_template.id
+    version = "$Latest"
   }
 }
 
