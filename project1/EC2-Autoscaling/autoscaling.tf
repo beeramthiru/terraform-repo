@@ -4,50 +4,39 @@ resource "aws_key_pair" "levelup_key" {
     public_key = file(var.PATH_TO_PUBLIC_KEY)
 }
 # Launch Template Resource
-resource "aws_launch_template" "my_launch_template" {
-  name = "my-launch-template"
-  description = "My Launch Template"
+resource "aws_launch_template" "my-launch-template" {
+  name_prefix  = "my-launch-template"
+  description  = "My Launch Template"
   image_id = lookup(var.AMIS, var.AWS_REGION)
   instance_type = "t2.micro"
 
-  #vpc_security_group_ids = [module.private_sg.security_group_id]
-  key_name = aws_key_pair.levelup_key.key_name 
-  ebs_optimized = true
-  #default_version = 1
-  update_default_version = true
-  block_device_mappings {
-    device_name = "/dev/sda1"
-    ebs {
-      volume_size = 10 
-      #volume_size = 20 # LT Update Testing - Version 2 of LT      
-      delete_on_termination = true
-      volume_type = "gp2" # default is gp2
-     }
-  }
-  monitoring {
-    enabled = true
-  }
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name = "myasg"
-    }
-  }
+  key_name = aws_key_pair.levelup_key.key_name
 }
 
 #Autoscaling Group
 resource "aws_autoscaling_group" "levelup-autoscaling" {
-  availability_zones = ["us-east-1a"]
-  #desired_capacity   = 2
-  max_size           = 2
-  min_size           = 1
-
-  launch_template {
-    id      = aws_launch_template.my_launch_template.id
+    name                      = "levelup-autoscaling"
+ #   vpc_zone_identifier       = ["subnet-9e0ad9f5", "subnet-d7a6afad"]
+    vpc_zone_identifier  = ["subnet-06a01023fb534a905"]
+    launch_template {
+    id      = aws_launch_template.my-launch-template.id
     version = "$Latest"
   }
+
+    min_size                  = 1
+    max_size                  = 2
+    health_check_grace_period = 200
+    health_check_type         = "EC2"
+    force_delete              = true
+
+    tag {
+      key                 = "Name"
+      value               = "LevelUp Custom EC2 instance"
+      propagate_at_launch = true
+  }
 }
+
+#Autoscaling Group
 
 #Autoscaling Configuration policy - Scaling Alarm
 resource "aws_autoscaling_policy" "levelup-cpu-policy" {
@@ -89,7 +78,7 @@ resource "aws_autoscaling_policy" "levelup-cpu-policy-scaledown" {
   policy_type            = "SimpleScaling"
 }
 
-#Auto descaling cloud watch 
+#Auto descaling cloud watch
 resource "aws_cloudwatch_metric_alarm" "levelup-cpu-alarm-scaledown" {
   alarm_name          = "levelup-cpu-alarm-scaledown"
   alarm_description   = "Alarm once CPU Uses Decrease"
